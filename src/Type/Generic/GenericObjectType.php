@@ -140,6 +140,19 @@ class GenericObjectType extends ObjectType
 
 	private function isSuperTypeOfInternal(Type $type, bool $acceptsContext): IsSuperTypeOfResult
 	{
+		$result = RecursionGuard::runOnObjectIdentity(
+			$this,
+			fn (): IsSuperTypeOfResult => $this->isSuperTypeOfInternalNoGuard($type, $acceptsContext),
+		);
+		if ($result instanceof ErrorType) {
+			return IsSuperTypeOfResult::createMaybe();
+		}
+
+		return $result;
+	}
+
+	private function isSuperTypeOfInternalNoGuard(Type $type, bool $acceptsContext): IsSuperTypeOfResult
+	{
 		$nakedSuperTypeOf = parent::isSuperTypeOf($type);
 		if ($nakedSuperTypeOf->no()) {
 			return $nakedSuperTypeOf;

@@ -2,6 +2,8 @@
 
 namespace PHPStan\Type\Generic;
 
+use PHPStan\Type\ErrorType;
+use PHPStan\Type\RecursionGuard;
 use PHPStan\Type\Type;
 use PHPStan\Type\VerbosityLevel;
 use function sprintf;
@@ -15,7 +17,10 @@ final class TypeProjectionHelper
 		VerbosityLevel $level,
 	): string
 	{
-		$describedType = $type->describe($level);
+		$describedType = RecursionGuard::runOnObjectIdentity($type, fn () => $type->describe($level));
+		if ($describedType instanceof ErrorType) {
+			$describedType = '...';
+		}
 
 		if ($variance === null || $variance->invariant()) {
 			return $describedType;

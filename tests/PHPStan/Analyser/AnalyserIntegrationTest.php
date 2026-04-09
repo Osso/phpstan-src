@@ -1529,6 +1529,17 @@ class AnalyserIntegrationTest extends PHPStanTestCase
 		$this->assertNoErrors($errors);
 	}
 
+	public function testBug14653(): void
+	{
+		// endless loop crash with recursive generic manager/entity pattern
+		$errors = $this->runAnalyse(__DIR__ . '/data/bug-14653.php');
+		$this->assertCount(1, $errors);
+		$this->assertSame(
+			'Type Bug14653\MyManager in generic type Bug14653\Entity<Bug14653\MyManager> in PHPDoc tag @extends is not subtype of template type TManager of Bug14653\Manager<static(Bug14653\Entity<TManager of Bug14653\Manager<...>>)> of class Bug14653\Entity.',
+			$errors[0]->getMessage(),
+		);
+	}
+
 	/**
 	 * @param string[]|null $allAnalysedFiles
 	 * @return list<Error>

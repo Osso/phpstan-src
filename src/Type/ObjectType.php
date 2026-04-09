@@ -727,9 +727,13 @@ class ObjectType implements TypeWithClassName, SubtractableType
 			$description .= '<';
 			$typeDescriptions = [];
 			foreach ($this->getTypes() as $type) {
-				$typeDescriptions[] = $type->describe(VerbosityLevel::cache());
+				$typeDescription = RecursionGuard::runOnObjectIdentity($type, fn () => $type->describe(VerbosityLevel::cache()));
+				if ($typeDescription instanceof ErrorType) {
+					$typeDescription = '...';
+				}
+				$typeDescriptions[] = $typeDescription;
 			}
-			$description .= '<' . implode(', ', $typeDescriptions) . '>';
+			$description .= implode(', ', $typeDescriptions) . '>';
 		}
 
 		$description .= $this->describeSubtractedType($this->subtractedType, VerbosityLevel::cache());
