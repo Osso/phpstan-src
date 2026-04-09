@@ -29,10 +29,25 @@ class ThisType extends StaticType
 
 	public function describe(VerbosityLevel $level): string
 	{
-		return sprintf('$this(%s)', $this->getStaticObjectType()->describe($level));
+		$description = RecursionGuard::runOnObjectIdentity($this, fn (): string => $this->getStaticObjectType()->describe($level));
+		if ($description instanceof ErrorType) {
+			$description = '...';
+		}
+
+		return sprintf('$this(%s)', $description);
 	}
 
 	public function isSuperTypeOf(Type $type): IsSuperTypeOfResult
+	{
+		$result = RecursionGuard::runOnObjectIdentity($this, fn (): IsSuperTypeOfResult => $this->isSuperTypeOfNoGuard($type));
+		if ($result instanceof ErrorType) {
+			return IsSuperTypeOfResult::createMaybe();
+		}
+
+		return $result;
+	}
+
+	private function isSuperTypeOfNoGuard(Type $type): IsSuperTypeOfResult
 	{
 		if ($type instanceof self) {
 			return $this->getStaticObjectType()->isSuperTypeOf($type);

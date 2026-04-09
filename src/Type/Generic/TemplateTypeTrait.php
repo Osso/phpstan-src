@@ -175,6 +175,20 @@ trait TemplateTypeTrait
 
 	public function equals(Type $type): bool
 	{
+		if ($this === $type) {
+			return true;
+		}
+
+		$result = RecursionGuard::runOnObjectIdentity($this, fn (): bool => $this->equalsNoGuard($type));
+		if ($result instanceof ErrorType) {
+			return true;
+		}
+
+		return $result;
+	}
+
+	private function equalsNoGuard(Type $type): bool
+	{
 		return $type instanceof self
 			&& $type->scope->equals($this->scope)
 			&& $type->name === $this->name

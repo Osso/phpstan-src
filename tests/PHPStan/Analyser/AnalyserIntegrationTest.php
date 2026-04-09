@@ -1535,9 +1535,15 @@ class AnalyserIntegrationTest extends PHPStanTestCase
 		$errors = $this->runAnalyse(__DIR__ . '/data/bug-14653.php');
 		$this->assertCount(1, $errors);
 		$this->assertSame(
-			'Type Bug14653\MyManager in generic type Bug14653\Entity<Bug14653\MyManager> in PHPDoc tag @extends is not subtype of template type TManager of Bug14653\Manager<static(Bug14653\Entity<TManager of Bug14653\Manager<...>>)> of class Bug14653\Entity.',
+			'Type Bug14653\MyManager in generic type Bug14653\Entity<Bug14653\MyManager> in PHPDoc tag @extends is not subtype of template type TManager of Bug14653\Manager<static(...)> of class Bug14653\Entity.',
 			$errors[0]->getMessage(),
 		);
+	}
+
+	public function testBug14654(): void
+	{
+		$errors = $this->runAnalyse(__DIR__ . '/data/bug-14654.php');
+		$this->assertNoErrors($errors);
 	}
 
 	/**

@@ -148,6 +148,16 @@ class StaticType implements TypeWithClassName, SubtractableType
 
 	public function isSuperTypeOf(Type $type): IsSuperTypeOfResult
 	{
+		$result = RecursionGuard::runOnObjectIdentity($this, fn (): IsSuperTypeOfResult => $this->isSuperTypeOfNoGuard($type));
+		if ($result instanceof ErrorType) {
+			return IsSuperTypeOfResult::createMaybe();
+		}
+
+		return $result;
+	}
+
+	private function isSuperTypeOfNoGuard(Type $type): IsSuperTypeOfResult
+	{
 		if ($type instanceof self) {
 			return $this->getStaticObjectType()->isSuperTypeOf($type);
 		}
@@ -177,6 +187,20 @@ class StaticType implements TypeWithClassName, SubtractableType
 
 	public function equals(Type $type): bool
 	{
+		if ($this === $type) {
+			return true;
+		}
+
+		$result = RecursionGuard::runOnObjectIdentity($this, fn (): bool => $this->equalsNoGuard($type));
+		if ($result instanceof ErrorType) {
+			return true;
+		}
+
+		return $result;
+	}
+
+	private function equalsNoGuard(Type $type): bool
+	{
 		if (get_class($type) !== static::class) {
 			return false;
 		}
@@ -186,7 +210,12 @@ class StaticType implements TypeWithClassName, SubtractableType
 
 	public function describe(VerbosityLevel $level): string
 	{
-		return sprintf('static(%s)', $this->getStaticObjectType()->describe($level));
+		$description = RecursionGuard::runOnObjectIdentity($this, fn (): string => $this->getStaticObjectType()->describe($level));
+		if ($description instanceof ErrorType) {
+			$description = '...';
+		}
+
+		return sprintf('static(%s)', $description);
 	}
 
 	public function getTemplateType(string $ancestorClassName, string $templateTypeName): Type
