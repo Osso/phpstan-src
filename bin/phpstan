@@ -25,7 +25,23 @@ use Symfony\Component\Console\Helper\ProgressBar;
 
 	$analysisStartTime = microtime(true);
 
-	$devOrPharLoader = require_once __DIR__ . '/../vendor/autoload.php';
+	$autoloadPaths = [
+		__DIR__ . '/../vendor/autoload.php',
+		dirname(__DIR__, 3) . '/autoload.php',
+	];
+	$devOrPharLoader = null;
+	foreach ($autoloadPaths as $autoloadPath) {
+		if (!@is_file($autoloadPath)) {
+			continue;
+		}
+
+		$devOrPharLoader = require_once $autoloadPath;
+		break;
+	}
+	if ($devOrPharLoader === null) {
+		fwrite(STDERR, sprintf('Autoloader not found. Tried:%s%s%s', PHP_EOL, implode(PHP_EOL, $autoloadPaths), PHP_EOL));
+		exit(1);
+	}
 	require_once __DIR__ . '/../preload.php';
 	$cwd = getcwd();
 	$composerJsonPath = ComposerHelper::getComposerJsonPath($cwd);
